@@ -1,0 +1,139 @@
+================================================================================
+                    SUPABASE QUICK SETUP - 5 MINUTES
+================================================================================
+
+✅ STEP 1: CREDENTIALS CONFIGURED
+   Your Supabase credentials are already set in .env.local:
+   • URL: https://epolwqnffmxgzadsamvr.supabase.co
+   • Key: Configured ✓
+
+⏳ STEP 2: CREATE DATABASE TABLES (DO THIS NOW)
+   
+   1. Open: https://supabase.com/dashboard
+   2. Login to your account
+   3. Select project: epolwqnffmxgzadsamvr
+   4. Click: SQL Editor (in sidebar)
+   5. Click: + New Query
+   6. Copy the SQL from: SUPABASE_SQL_SETUP.sql
+   7. Paste into the editor
+   8. Click: Run
+
+⏳ STEP 3: VERIFY TABLES CREATED
+   
+   1. Go to: Table Editor (in sidebar)
+   2. You should see:
+      • creators table
+      • videos table
+      • settings table
+   3. If tables appear, you're done!
+
+⏳ STEP 4: RESTART YOUR APP
+   
+   1. Stop the dev server (Ctrl+C)
+   2. Run: npm run dev
+   3. Open: http://localhost:3000
+
+🎉 DONE! Your CRM is now connected to Supabase!
+
+================================================================================
+                              WHAT HAPPENS NOW
+================================================================================
+
+✓ Add Creator → Saved to localStorage + synced to Supabase
+✓ Add Video → Saved to localStorage + synced to Supabase
+✓ Refresh Page → Loads data from Supabase
+✓ Go Offline → App still works with localStorage
+✓ Come Back Online → Data syncs again
+
+================================================================================
+                                  TEST IT
+================================================================================
+
+1. Open http://localhost:3000
+2. Add a Creator:
+   • Name: Test Creator
+   • Instagram: @testcreator
+   • Account Size: 100000
+   • Click "Add Creator"
+
+3. Check Supabase:
+   • Go to https://supabase.com/dashboard
+   • Open Table Editor
+   • Click "creators" table
+   • You should see your creator there!
+
+4. Add more data and watch it sync to Supabase
+
+================================================================================
+                               IF SOMETHING GOES WRONG
+================================================================================
+
+PROBLEM: "Could not sync from Supabase"
+SOLUTION:
+  • Check .env.local has credentials (it does ✓)
+  • Make sure database tables are created
+  • Check browser console (F12) for errors
+  • Try refreshing page
+
+PROBLEM: "Tables don't appear in Supabase"
+SOLUTION:
+  • Make sure you ran the SQL query
+  • Check the query executed without errors
+  • Refresh the Supabase page
+  • Try running SQL again
+
+PROBLEM: "Data not appearing in Supabase"
+SOLUTION:
+  • Add new creator/video (must be added AFTER tables created)
+  • Check Supabase Table Editor
+  • Open browser console (F12) - look for sync messages
+  • Verify tables exist first
+
+PROBLEM: "App won't start"
+SOLUTION:
+  • Make sure .env.local file exists (it does ✓)
+  • Run: npm install
+  • Clear cache: rm -r .next (or delete .next folder)
+  • Restart: npm run dev
+
+================================================================================
+                            SUPABASE CREDENTIALS STORED
+================================================================================
+
+Location: d:\web\linkage-crm\.env.local
+
+Your credentials:
+  URL: https://epolwqnffmxgzadsamvr.supabase.co
+  KEY: Configured ✓
+
+⚠️  IMPORTANT: 
+  • Never commit .env.local to GitHub
+  • Keep these credentials private
+  • Don't share with others
+
+================================================================================
+                            NEXT: CREATE TABLES
+================================================================================
+
+👉 NEXT STEP: Open SUPABASE_SQL_SETUP.sql and run the SQL in Supabase
+
+Files to read:
+  1. SUPABASE_QUICK_SETUP.txt ← You are here
+  2. SUPABASE_SETUP_INSTRUCTIONS.md ← Detailed steps
+  3. SUPABASE_SQL_SETUP.sql ← Copy this SQL
+
+================================================================================
+                         Ready? Let's Create Tables!
+================================================================================
+
+Process:
+  1. Open Supabase SQL Editor
+  2. Copy SQL from SUPABASE_SQL_SETUP.sql
+  3. Paste and Run
+  4. Verify tables created
+  5. Restart app
+  6. Done!
+
+Time: 5 minutes ⏱️
+
+Let's go! 🚀
