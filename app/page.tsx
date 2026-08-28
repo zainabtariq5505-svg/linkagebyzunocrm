@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Calendar } from 'lucide-react'
 import { CRMData, DayStats } from '@/lib/types'
-import { loadData } from '@/lib/db'
 import { getDayStats, formatNumber, getDateString } from '@/lib/utils'
 import StatCard from '@/components/StatCard'
 import AddCreatorModal from '@/components/modals/AddCreatorModal'
@@ -18,15 +17,21 @@ export default function Dashboard() {
   const [showAddVideo, setShowAddVideo] = useState(false)
 
   useEffect(() => {
-    const crmData = loadData()
-    setData(crmData)
+    // Load data from Supabase first, then fallback to localStorage
+    const loadInitialData = async () => {
+      const { loadDataFromSupabase } = await import('@/lib/db')
+      const crmData = await loadDataFromSupabase()
+      setData(crmData)
 
-    // Calculate today's stats
-    const today = getDateString(new Date())
-    const dayOfWeek = new Date().getDay()
-    const required = crmData.dailyRequirements.find(r => r.dayOfWeek === dayOfWeek)?.requiredVideos || 0
-    const stats = getDayStats(today, crmData.videos, crmData.creators, required)
-    setTodayStats(stats)
+      // Calculate today's stats
+      const today = getDateString(new Date())
+      const dayOfWeek = new Date().getDay()
+      const required = crmData.dailyRequirements.find(r => r.dayOfWeek === dayOfWeek)?.requiredVideos || 0
+      const stats = getDayStats(today, crmData.videos, crmData.creators, required)
+      setTodayStats(stats)
+    }
+
+    loadInitialData()
   }, [])
 
   if (!data || !todayStats) return <div className="animate-pulse">Loading...</div>

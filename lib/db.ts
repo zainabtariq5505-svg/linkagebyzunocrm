@@ -16,8 +16,69 @@ import { supabase } from './supabase'
 /**
  * Load CRM data - tries Supabase first, falls back to localStorage
  */
+export async function loadDataFromSupabase(): Promise<CRMData> {
+  try {
+    if (!supabase) {
+      console.warn('Supabase not configured, using localStorage only')
+      return loadFromLocal()
+    }
+
+    // Fetch from Supabase
+    const [creatorsRes, videosRes, reqRes] = await Promise.all([
+      supabase.from('creators').select('*'),
+      supabase.from('videos').select('*'),
+      supabase.from('dailyRequirements').select('*'),
+    ])
+
+    if (creatorsRes.data && videosRes.data && reqRes.data) {
+      const data: CRMData = {
+        creators: creatorsRes.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          instagramUsername: c.instagramHandle || '',
+          accountSize: 0,
+          status: c.status,
+          createdAt: c.createdAt,
+        })),
+        videos: videosRes.data.map((v: any) => ({
+          id: v.id,
+          creatorId: v.creatorId,
+          date: v.date,
+          slot: v.slot,
+          videoUrl: v.videoUrl,
+          views: v.views || 0,
+          likes: v.likes,
+          comments: v.comments,
+          status: v.status,
+          notes: v.notes,
+          createdAt: v.createdAt,
+        })),
+        dailyRequirements: reqRes.data.map((r: any) => ({
+          dayOfWeek: r.dayOfWeek,
+          requiredVideos: r.requiredVideos,
+        })),
+        settings: {
+          accentColor: '#8B5CF6',
+          darkMode: false,
+        },
+      }
+      
+      // Save to localStorage as backup
+      saveToLocal(data)
+      console.log('✓ Data loaded from Supabase')
+      return data
+    }
+  } catch (error) {
+    console.warn('Supabase load failed, using localStorage:', error)
+  }
+
+  return loadFromLocal()
+}
+
+/**
+ * Load CRM data - synchronous version for client components
+ */
 export function loadData(): CRMData {
-  // For now, use localStorage as primary (Supabase sync happens in background)
   return loadFromLocal()
 }
 
