@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase URL or API key')
+// Initialize Supabase only if credentials are available
+let supabase: any = null
+
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export { supabase }
 
 /**
  * Type definitions for database tables
