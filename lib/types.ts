@@ -17,6 +17,8 @@ export interface Video {
   slot: number
   videoUrl: string
   views: number
+  likes?: number
+  comments?: number
   status: VideoStatus
   notes?: string
   createdAt: number
@@ -55,4 +57,10 @@ export interface SlotStatus {
   creatorName?: string
   status: 'complete' | 'partial' | 'behind' | 'neutral'
   views?: number
+}
+
+export interface InstagramVideoStats {
+  views: number
+  likes: number
+  comments: number
 }

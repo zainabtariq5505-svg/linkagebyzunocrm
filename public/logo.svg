@@ -1,0 +1,28 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFC700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DAA520;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#000" opacity="0.3"/>
+  
+  <!-- Letter L -->
+  <text x="55" y="150" font-family="Georgia, serif" font-size="120" font-weight="bold" fill="url(#goldGradient)" filter="url(#glow)" letter-spacing="-5">L</text>
+  
+  <!-- Letter B -->
+  <text x="90" y="150" font-family="Georgia, serif" font-size="120" font-weight="bold" fill="url(#goldGradient)" filter="url(#glow)" letter-spacing="-5">B</text>
+  
+  <!-- Decorative line -->
+  <line x1="40" y1="160" x2="160" y2="160" stroke="url(#goldGradient)" stroke-width="2" opacity="0.6"/>
+</svg>

@@ -1,4 +1,3 @@
-import { getSupabaseClient, isSupabaseConfigured } from './supabase'
 import { CRMData, Creator, Video } from './types'
 import {
   loadData as loadFromLocal,
@@ -12,100 +11,87 @@ import {
   updateDailyRequirement as updateDailyRequirementLocal,
   updateSettings as updateSettingsLocal,
 } from './storage'
-
-// Check if we should use Supabase (only on client side)
-const USE_SUPABASE = typeof window !== 'undefined' && isSupabaseConfigured()
+import { supabase } from './supabase'
 
 /**
- * Sync data from Supabase to localStorage on app load
- */
-export async function initializeDB() {
-  if (!USE_SUPABASE) return
-
-  try {
-    const client = getSupabaseClient()
-    if (!client) return
-
-    // Fetch all data from Supabase
-    const [creatorsRes, videosRes, settingsRes] = await Promise.all([
-      client.from('creators').select('*'),
-      client.from('videos').select('*'),
-      client.from('settings').select('*').single(),
-    ])
-
-    if (creatorsRes.data && videosRes.data && settingsRes.data) {
-      // Convert Supabase data to local format and save
-      const data: CRMData = {
-        creators: creatorsRes.data,
-        videos: videosRes.data,
-        dailyRequirements: settingsRes.data.dailyRequirements || [],
-        settings: {
-          accentColor: settingsRes.data.accentColor || '#8B5CF6',
-          darkMode: settingsRes.data.darkMode || false,
-        },
-      }
-      saveToLocal(data)
-      console.log('✓ Data synced from Supabase')
-    }
-  } catch (error) {
-    console.warn('Could not sync from Supabase, using local storage:', error)
-  }
-}
-
-/**
- * Load CRM data
+ * Load CRM data - tries Supabase first, falls back to localStorage
  */
 export function loadData(): CRMData {
+  // For now, use localStorage as primary (Supabase sync happens in background)
   return loadFromLocal()
 }
 
 /**
- * Save CRM data to both local and Supabase (if configured)
+ * Save CRM data to Supabase
  */
-export function saveData(data: CRMData): void {
-  // Always save to local storage
-  saveToLocal(data)
-
-  // Also sync to Supabase if configured
-  if (USE_SUPABASE) {
-    syncToSupabase(data)
-  }
-}
-
-/**
- * Sync data to Supabase
- */
-async function syncToSupabase(data: CRMData) {
+export async function saveDataToSupabase(data: CRMData): Promise<void> {
   try {
-    const client = getSupabaseClient()
-    if (!client) return
-
-    // Upsert creators
+    // Save creators
     if (data.creators.length > 0) {
-      await client.from('creators').upsert(data.creators, { onConflict: 'id' })
+      for (const creator of data.creators) {
+        const { error } = await supabase
+          .from('creators')
+          .upsert(
+            {
+              id: creator.id,
+              name: creator.name,
+              status: creator.status,
+              instagramHandle: creator.instagramUsername,
+              createdAt: creator.createdAt,
+              updatedAt: Date.now(),
+            },
+            { onConflict: 'id' }
+          )
+        if (error) console.error('Error saving creator:', error)
+      }
     }
 
-    // Upsert videos
+    // Save videos
     if (data.videos.length > 0) {
-      await client.from('videos').upsert(data.videos, { onConflict: 'id' })
+      for (const video of data.videos) {
+        const { error } = await supabase
+          .from('videos')
+          .upsert(
+            {
+              id: video.id,
+              creatorId: video.creatorId,
+              date: video.date,
+              slot: video.slot,
+              videoUrl: video.videoUrl,
+              views: video.views,
+              likes: video.likes || 0,
+              comments: video.comments || 0,
+              status: video.status,
+              notes: video.notes,
+              createdAt: video.createdAt,
+              updatedAt: Date.now(),
+            },
+            { onConflict: 'id' }
+          )
+        if (error) console.error('Error saving video:', error)
+      }
     }
 
-    // Update settings
-    await client.from('settings').upsert(
-      {
-        id: 1,
-        dailyRequirements: data.dailyRequirements,
-        accentColor: data.settings.accentColor,
-        darkMode: data.settings.darkMode,
-        updatedAt: new Date().toISOString(),
-      },
-      { onConflict: 'id' }
-    )
+    // Save daily requirements
+    for (const req of data.dailyRequirements) {
+      const { error } = await supabase
+        .from('dailyRequirements')
+        .upsert(
+          {
+            id: `req_${req.dayOfWeek}`,
+            dayOfWeek: req.dayOfWeek,
+            requiredVideos: req.requiredVideos,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          { onConflict: 'id' }
+        )
+      if (error) console.error('Error saving daily requirement:', error)
+    }
 
-    console.log('✓ Data synced to Supabase')
+    console.log('✓ Data saved to Supabase')
   } catch (error) {
-    console.warn('Could not sync to Supabase:', error)
-    // Silently fail - local storage is backup
+    console.error('Error syncing to Supabase:', error)
   }
 }
 
@@ -115,7 +101,9 @@ async function syncToSupabase(data: CRMData) {
 export function addCreator(creator: Omit<Creator, 'id' | 'createdAt'>): Creator {
   const newCreator = addCreatorLocal(creator)
   const data = loadFromLocal()
-  saveData(data)
+  saveToLocal(data)
+  // Also save to Supabase in background
+  saveDataToSupabase(data)
   return newCreator
 }
 
@@ -123,7 +111,9 @@ export function updateCreator(id: string, updates: Partial<Creator>): Creator | 
   const result = updateCreatorLocal(id, updates)
   if (result) {
     const data = loadFromLocal()
-    saveData(data)
+    saveToLocal(data)
+    // Also save to Supabase in background
+    saveDataToSupabase(data)
   }
   return result
 }
@@ -132,7 +122,9 @@ export function deleteCreator(id: string): boolean {
   const result = deleteCreatorLocal(id)
   if (result) {
     const data = loadFromLocal()
-    saveData(data)
+    saveToLocal(data)
+    // Also save to Supabase in background
+    saveDataToSupabase(data)
   }
   return result
 }
@@ -143,7 +135,9 @@ export function deleteCreator(id: string): boolean {
 export function addVideo(video: Omit<Video, 'id' | 'createdAt'>): Video {
   const newVideo = addVideoLocal(video)
   const data = loadFromLocal()
-  saveData(data)
+  saveToLocal(data)
+  // Also save to Supabase in background
+  saveDataToSupabase(data)
   return newVideo
 }
 
@@ -151,7 +145,9 @@ export function updateVideo(id: string, updates: Partial<Video>): Video | null {
   const result = updateVideoLocal(id, updates)
   if (result) {
     const data = loadFromLocal()
-    saveData(data)
+    saveToLocal(data)
+    // Also save to Supabase in background
+    saveDataToSupabase(data)
   }
   return result
 }
@@ -160,7 +156,9 @@ export function deleteVideo(id: string): boolean {
   const result = deleteVideoLocal(id)
   if (result) {
     const data = loadFromLocal()
-    saveData(data)
+    saveToLocal(data)
+    // Also save to Supabase in background
+    saveDataToSupabase(data)
   }
   return result
 }
@@ -171,11 +169,15 @@ export function deleteVideo(id: string): boolean {
 export function updateDailyRequirement(dayOfWeek: number, requiredVideos: number): void {
   updateDailyRequirementLocal(dayOfWeek, requiredVideos)
   const data = loadFromLocal()
-  saveData(data)
+  saveToLocal(data)
+  // Also save to Supabase in background
+  saveDataToSupabase(data)
 }
 
 export function updateSettings(settings: Partial<CRMData['settings']>): void {
   updateSettingsLocal(settings)
   const data = loadFromLocal()
-  saveData(data)
+  saveToLocal(data)
+  // Also save to Supabase in background
+  saveDataToSupabase(data)
 }

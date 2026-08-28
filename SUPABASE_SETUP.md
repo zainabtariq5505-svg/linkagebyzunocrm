@@ -1,141 +1,127 @@
-# Supabase Setup Guide
+# Supabase Setup Guide for Linkage CRM
 
-This CRM supports optional Supabase backend for cloud data persistence. If not configured, it uses local browser storage as a fallback.
+## 📋 Database Schema
 
-## Setup Steps
+Your Supabase project needs the following tables. Copy and run the SQL from `supabase/migrations/001_create_tables.sql`:
 
-### 1. Create a Supabase Project
+### Tables Created:
+1. **creators** - Store creator information
+2. **videos** - Store video data and metrics
+3. **dailyRequirements** - Daily posting requirements per day of week
+4. **activityLogs** - Audit trail of all actions
+5. **automationRules** - Automation rule configurations
+6. **automationAlerts** - Generated alerts from automation rules
 
-1. Go to [supabase.com](https://supabase.com) and sign up/login
-2. Create a new project
-3. Wait for the project to initialize
-4. Go to **Settings → API** to get your credentials
+## 🔧 Setup Steps
 
-### 2. Get Your Credentials
+### Step 1: Go to Supabase SQL Editor
+1. Open your Supabase project
+2. Go to **SQL Editor** on the left sidebar
+3. Click **New Query**
 
-Copy:
-- **Project URL** (e.g., `https://xxxxx.supabase.co`)
-- **Anon Key** (public anonymous key for client-side access)
+### Step 2: Copy and Run SQL
+1. Copy the entire content from `supabase/migrations/001_create_tables.sql`
+2. Paste into the SQL editor
+3. Click **Run**
+4. Wait for confirmation (takes ~5 seconds)
 
-### 3. Set Environment Variables
+### Step 3: Verify Tables
+1. Go to **Table Editor** in Supabase
+2. You should see all 6 tables listed
 
-Edit `.env.local` in the project root:
+### Step 4: Environment Variables
+Create `.env.local` file in project root:
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+```
+NEXT_PUBLIC_SUPABASE_URL=https://ojkkrzcjfeixbyyynxao.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qa2tyemNqZmVpeGJ5eXlueGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MTA5MDksImV4cCI6MjEwMzQ4NjkwOX0.wcxEt_GOTuTAwi3f0NKetzDwRSoXpUcnuQuUafSizQw
 ```
 
-### 4. Create Database Tables
-
-Run these SQL queries in Supabase SQL Editor:
-
-#### Creators Table
-```sql
-CREATE TABLE creators (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  instagramUsername TEXT NOT NULL,
-  accountSize INTEGER NOT NULL,
-  status TEXT NOT NULL DEFAULT 'Active',
-  createdAt BIGINT NOT NULL,
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE INDEX creators_status_idx ON creators(status);
-```
-
-#### Videos Table
-```sql
-CREATE TABLE videos (
-  id TEXT PRIMARY KEY,
-  creatorId TEXT NOT NULL REFERENCES creators(id) ON DELETE CASCADE,
-  date TEXT NOT NULL,
-  slot INTEGER NOT NULL,
-  videoUrl TEXT NOT NULL,
-  views INTEGER NOT NULL DEFAULT 0,
-  status TEXT NOT NULL,
-  notes TEXT,
-  createdAt BIGINT NOT NULL,
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE INDEX videos_date_idx ON videos(date);
-CREATE INDEX videos_creatorId_idx ON videos(creatorId);
-CREATE INDEX videos_status_idx ON videos(status);
-```
-
-#### Settings Table
-```sql
-CREATE TABLE settings (
-  id INTEGER PRIMARY KEY DEFAULT 1,
-  dailyRequirements JSONB DEFAULT '[]'::jsonb,
-  accentColor TEXT DEFAULT '#8B5CF6',
-  darkMode BOOLEAN DEFAULT false,
-  updatedAt TIMESTAMP DEFAULT now()
-);
-
-INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
-```
-
-### 5. Set Row Level Security (RLS)
-
-For development, disable RLS on all tables (not recommended for production):
-
-1. Go to **Authentication → Policies**
-2. For each table (creators, videos, settings):
-   - Click on the table
-   - Disable RLS or create permissive policies
-
-**For production**, create proper RLS policies to secure data.
-
-### 6. Restart the App
-
+### Step 5: Restart Dev Server
 ```bash
 npm run dev
 ```
 
-The app will now:
-- Automatically sync to Supabase on every change
-- Load data from Supabase on startup
-- Fall back to local storage if Supabase is unavailable
+## ✅ Verification
 
-## How It Works
+After setup, verify everything works:
 
-- **Data is written to local storage immediately** (fast UI updates)
-- **Data is also synced to Supabase in the background** (cloud backup)
-- **On app load**, data is synced from Supabase to local storage
-- **If Supabase is unavailable**, the app continues to work with local storage
+1. Add a creator → Check appears in Supabase
+2. Add a video → Check appears in Supabase
+3. Check automation → Alerts saved to database
+4. Check activity logs → All actions logged
 
-## Testing
+## 🔒 Security Notes
 
-1. Add some creators and videos
-2. Go to Supabase dashboard → **Table Editor**
-3. You should see your data in the tables
-4. Close and reopen the app - data persists from Supabase
+- **NEVER** commit `.env.local` to git
+- Keep your API keys secret
+- The `anon` key is public-facing (safe)
+- Don't share the URL publicly
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
-### "Could not sync from Supabase"
-- Check your `.env.local` credentials
-- Ensure RLS is disabled or policies allow access
-- Check browser console for specific errors
+**"Connection refused"**
+- Check your Supabase URL is correct
+- Verify your API key is valid
+- Make sure tables exist
 
-### Data not syncing
-- Verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are correct
-- Open browser DevTools Console to see sync status messages
-- Check Supabase project status
+**"Permission denied"**
+- Anon key doesn't have table access
+- Go to Supabase → Authentication → Policies
+- Enable anon access for tables
 
-### "Table does not exist"
-- Run all SQL queries from section 4
-- Verify tables exist in Supabase Table Editor
+**"Table doesn't exist"**
+- Run the SQL migration again
+- Check Table Editor to confirm creation
 
-## Optional: Production Setup
+## 📊 Database Schema Details
 
-For production, consider:
+### creators
+```
+id (UUID)
+name (text)
+email (text)
+status (text) - 'Active', 'Inactive'
+joinDate (text) - ISO date
+instagramHandle (text)
+notes (text)
+createdAt (bigint)
+updatedAt (bigint)
+```
 
-1. **Enable Row Level Security (RLS)** - restrict data access
-2. **Add authentication** - implement user login with Supabase Auth
-3. **Use service role key** - for backend operations
-4. **Enable backups** - in Supabase project settings
-5. **Monitor usage** - watch your Supabase quota
+### videos
+```
+id (UUID)
+creatorId (UUID) - foreign key
+date (text) - YYYY-MM-DD
+slot (integer)
+videoUrl (text)
+views (integer)
+likes (integer)
+comments (integer)
+status (text) - 'Added', 'Approved', 'Rejected', 'Missed'
+notes (text)
+createdAt (bigint)
+updatedAt (bigint)
+```
+
+### automationAlerts
+```
+id (UUID)
+ruleId (UUID) - foreign key
+type (text)
+targetId (UUID)
+targetName (text)
+message (text)
+severity (text) - 'info', 'warning', 'critical'
+timestamp (bigint)
+read (boolean)
+```
+
+## 🚀 Next Steps
+
+After tables are created:
+1. Environment variables configured
+2. Dev server will connect to Supabase
+3. All data saves to database instead of localStorage
+4. Data persists across sessions and devices

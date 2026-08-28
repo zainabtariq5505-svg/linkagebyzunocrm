@@ -2,27 +2,28 @@
 
 import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
-import { addVideo, loadData } from '@/lib/db'
-import { Creator } from '@/lib/types'
-import { getDateString } from '@/lib/utils'
-import { isValidInstagramVideoUrl } from '@/lib/instagram'
+import { updateVideo, loadData } from '@/lib/db'
+import { Creator, Video } from '@/lib/types'
+import { fetchInstagramVideoStats, isValidInstagramVideoUrl } from '@/lib/instagram'
+import { addActivityLog } from '@/lib/activityLog'
 
 interface Props {
+  video: Video
   onClose: () => void
 }
 
-export default function AddVideoModal({ onClose }: Props) {
+export default function EditVideoModal({ video, onClose }: Props) {
   const [creators, setCreators] = useState<Creator[]>([])
   const [formData, setFormData] = useState({
-    creatorId: '',
-    date: getDateString(new Date()),
-    slot: '1',
-    videoUrl: '',
-    views: '',
-    likes: '',
-    comments: '',
-    status: 'Added' as const,
-    notes: '',
+    creatorId: video.creatorId,
+    date: video.date,
+    slot: video.slot.toString(),
+    videoUrl: video.videoUrl,
+    views: video.views.toString(),
+    likes: (video.likes || '').toString(),
+    comments: (video.comments || '').toString(),
+    status: video.status,
+    notes: video.notes || '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -48,27 +49,19 @@ export default function AddVideoModal({ onClose }: Props) {
     setError('')
 
     try {
-      // Use new server-side API endpoint to bypass CORS
-      const response = await fetch(`/api/instagram?url=${encodeURIComponent(formData.videoUrl)}`)
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch')
-      }
-
-      const stats = await response.json()
-
-      if (stats.views || stats.likes || stats.comments) {
+      const stats = await fetchInstagramVideoStats(formData.videoUrl)
+      if (stats) {
         setFormData(prev => ({
           ...prev,
-          views: stats.views?.toString() || '0',
-          likes: stats.likes?.toString() || '0',
-          comments: stats.comments?.toString() || '0',
+          views: stats.views.toString(),
+          likes: stats.likes.toString(),
+          comments: stats.comments.toString(),
         }))
       } else {
-        setError('Could not fetch stats. Please enter manually.')
+        setError('Could not fetch Instagram stats. Please enter manually.')
       }
     } catch (err) {
-      setError('Failed to fetch Instagram stats. Please enter manually.')
+      setError('Failed to fetch Instagram stats')
     } finally {
       setFetchingStats(false)
     }
@@ -85,7 +78,6 @@ export default function AddVideoModal({ onClose }: Props) {
       return
     }
 
-    // Views are required if not fetched from Instagram
     if (!formData.views) {
       setError('Please enter views or fetch from Instagram')
       setLoading(false)
@@ -93,7 +85,7 @@ export default function AddVideoModal({ onClose }: Props) {
     }
 
     try {
-      addVideo({
+      updateVideo(video.id, {
         creatorId: formData.creatorId,
         date: formData.date,
         slot: parseInt(formData.slot),
@@ -105,9 +97,10 @@ export default function AddVideoModal({ onClose }: Props) {
         notes: formData.notes.trim() || undefined,
       })
 
+      addActivityLog('edit_video', `Video ${video.id}`, `Updated video details`)
       window.location.reload()
     } catch (err) {
-      setError('Failed to add video')
+      setError('Failed to update video')
       setLoading(false)
     }
   }
@@ -116,7 +109,7 @@ export default function AddVideoModal({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full mx-4 p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add Video</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Video</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors"
@@ -197,9 +190,6 @@ export default function AddVideoModal({ onClose }: Props) {
                 {fetchingStats ? <Loader size={16} className="animate-spin" /> : 'Fetch'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
-              Click "Fetch" to get Instagram stats. Can override manually anytime.
-            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -282,7 +272,7 @@ export default function AddVideoModal({ onClose }: Props) {
             disabled={fetchingStats || loading}
             className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2.5 rounded-lg transition-colors mt-6"
           >
-            {loading ? 'Adding...' : 'Add Video'}
+            {loading ? 'Updating...' : 'Update Video'}
           </button>
         </form>
       </div>

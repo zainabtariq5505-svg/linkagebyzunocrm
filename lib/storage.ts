@@ -1,4 +1,5 @@
 import { CRMData, Creator, Video, DailyRequirement } from './types'
+import { backupData, recoverData } from './dataRecovery'
 
 // Helper function to get daily requirement
 export function getDailyRequirement(requirements: DailyRequirement[], dayOfWeek: number): number {
@@ -47,8 +48,22 @@ export function loadData(): CRMData {
     if (stored) {
       return JSON.parse(stored)
     }
+
+    // Try to recover data if primary key is empty
+    const recovered = recoverData()
+    if (recovered) {
+      saveData(recovered)
+      return recovered
+    }
   } catch (error) {
     console.error('Failed to load data from storage:', error)
+    
+    // Last resort: try to recover
+    const recovered = recoverData()
+    if (recovered) {
+      console.log('Using recovered data as fallback')
+      return recovered
+    }
   }
 
   return DEFAULT_DATA
@@ -62,6 +77,8 @@ export function saveData(data: CRMData): void {
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    // Create automatic backup
+    backupData(data)
   } catch (error) {
     console.error('Failed to save data to storage:', error)
   }
