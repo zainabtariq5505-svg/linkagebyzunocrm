@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Calendar } from 'lucide-react'
+import { Plus, Calendar, TrendingUp, BarChart3 } from 'lucide-react'
 import { CRMData, DayStats } from '@/lib/types'
 import { getDayStats, formatNumber, getDateString } from '@/lib/utils'
+import { getLast7DaysStats, getLast30DaysStats } from '@/lib/stats'
 import StatCard from '@/components/StatCard'
 import AddCreatorModal from '@/components/modals/AddCreatorModal'
 import AddVideoModal from '@/components/modals/AddVideoModal'
@@ -104,7 +105,66 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Today's Overview */}
+      {/* Period Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Last 7 Days */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-900/10 rounded-xl border border-blue-200 dark:border-blue-800/30 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Last 7 Days</h3>
+            <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+              <TrendingUp size={20} />
+            </div>
+          </div>
+          {(() => {
+            const stats7 = getLast7DaysStats(data.videos)
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Videos</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{stats7.videoCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Total Views</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{formatNumber(stats7.totalViews)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Avg Engagement</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">{stats7.avgEngagement}%</span>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+
+        {/* Last 30 Days */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10 rounded-xl border border-purple-200 dark:border-purple-800/30 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Last 30 Days</h3>
+            <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+              <BarChart3 size={20} />
+            </div>
+          </div>
+          {(() => {
+            const stats30 = getLast30DaysStats(data.videos)
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Videos</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{stats30.videoCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Total Views</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{formatNumber(stats30.totalViews)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-slate-400">Avg Engagement</span>
+                  <span className="font-bold text-purple-600 dark:text-purple-400">{stats30.avgEngagement}%</span>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-900/10 rounded-xl border border-blue-200 dark:border-blue-800/30 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between mb-4">

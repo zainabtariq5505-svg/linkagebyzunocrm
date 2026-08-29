@@ -1,7 +1,7 @@
 -- Linkage CRM Database Schema
 -- Run this in Supabase SQL Editor
 
--- Drop existing tables if they exist (optional, for fresh setup)
+-- Drop existing tables if they exist
 DROP TABLE IF EXISTS automationAlerts;
 DROP TABLE IF EXISTS automationRules;
 DROP TABLE IF EXISTS activityLogs;
@@ -32,8 +32,7 @@ CREATE TABLE videos (
   status TEXT NOT NULL DEFAULT 'Added',
   notes TEXT,
   createdAt BIGINT NOT NULL,
-  updatedAt BIGINT NOT NULL,
-  FOREIGN KEY (creatorId) REFERENCES creators(id) ON DELETE CASCADE
+  updatedAt BIGINT NOT NULL
 );
 
 -- Daily Requirements table
@@ -78,8 +77,7 @@ CREATE TABLE automationAlerts (
   message TEXT NOT NULL,
   severity TEXT NOT NULL,
   timestamp BIGINT NOT NULL,
-  read BOOLEAN DEFAULT false,
-  FOREIGN KEY (ruleId) REFERENCES automationRules(id) ON DELETE CASCADE
+  read BOOLEAN DEFAULT false
 );
 
 -- Create indexes for better performance
@@ -92,10 +90,10 @@ CREATE INDEX IF NOT EXISTS idx_automationAlerts_ruleId ON automationAlerts(ruleI
 CREATE INDEX IF NOT EXISTS idx_automationAlerts_read ON automationAlerts(read);
 CREATE INDEX IF NOT EXISTS idx_creators_status ON creators(status);
 
--- Enable Row Level Security (optional but recommended)
-ALTER TABLE creators ENABLE ROW LEVEL SECURITY;
-ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "dailyRequirements" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activityLogs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE automationRules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE automationAlerts ENABLE ROW LEVEL SECURITY;
+-- DISABLE Row Level Security - Allow anon access (since we're using public API key)
+ALTER TABLE creators DISABLE ROW LEVEL SECURITY;
+ALTER TABLE videos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "dailyRequirements" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE activityLogs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE automationRules DISABLE ROW LEVEL SECURITY;
+ALTER TABLE automationAlerts DISABLE ROW LEVEL SECURITY;
