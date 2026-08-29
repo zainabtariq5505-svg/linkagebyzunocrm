@@ -1,124 +1,55 @@
-# 🔥 INSTANT FIX - DO THIS RIGHT NOW
+# 🔥 INSTANT FIX - SIMPLIFIED VERSION
 
-## Copy This Exact SQL
+## If you're getting errors, use THIS instead
 
 Go to: https://supabase.com → Your Project → SQL Editor → New Query
 
 **PASTE THIS EXACTLY:**
 
 ```sql
--- Drop tables in correct order (respecting foreign keys)
-DROP TABLE IF EXISTS automationAlerts CASCADE;
-DROP TABLE IF EXISTS automationRules CASCADE;
-DROP TABLE IF EXISTS activityLogs CASCADE;
-DROP TABLE IF EXISTS videos CASCADE;
-DROP TABLE IF EXISTS "dailyRequirements" CASCADE;
-DROP TABLE IF EXISTS creators CASCADE;
+-- SIMPLE FIX - Just disable RLS on existing tables
+ALTER TABLE IF EXISTS creators DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS videos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS "dailyRequirements" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS activityLogs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS automationRules DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS automationAlerts DISABLE ROW LEVEL SECURITY;
 
--- Create creators first (no dependencies)
-CREATE TABLE creators (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'Active',
-  instagramHandle TEXT,
-  createdAt BIGINT NOT NULL,
-  updatedAt BIGINT NOT NULL
-);
-
--- Create videos (depends on creators)
-CREATE TABLE videos (
-  id TEXT PRIMARY KEY,
-  creatorId TEXT NOT NULL REFERENCES creators(id) ON DELETE CASCADE,
-  date TEXT NOT NULL,
-  slot INTEGER NOT NULL,
-  videoUrl TEXT NOT NULL,
-  views INTEGER DEFAULT 0,
-  likes INTEGER DEFAULT 0,
-  comments INTEGER DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'Added',
-  notes TEXT,
-  createdAt BIGINT NOT NULL,
-  updatedAt BIGINT NOT NULL
-);
-
--- Create dailyRequirements
-CREATE TABLE "dailyRequirements" (
-  id TEXT PRIMARY KEY,
-  dayOfWeek INTEGER NOT NULL UNIQUE,
-  requiredVideos INTEGER NOT NULL,
-  createdAt BIGINT NOT NULL,
-  updatedAt BIGINT NOT NULL
-);
-
--- Create activityLogs
-CREATE TABLE activityLogs (
-  id TEXT PRIMARY KEY,
-  action TEXT NOT NULL,
-  targetType TEXT NOT NULL,
-  targetId TEXT NOT NULL,
-  targetName TEXT,
-  details TEXT,
-  timestamp BIGINT NOT NULL
-);
-
--- Create automationRules
-CREATE TABLE automationRules (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL,
-  enabled BOOLEAN DEFAULT true,
-  threshold INTEGER,
-  action TEXT NOT NULL,
-  createdAt BIGINT NOT NULL,
-  updatedAt BIGINT NOT NULL
-);
-
--- Create automationAlerts (depends on automationRules)
-CREATE TABLE automationAlerts (
-  id TEXT PRIMARY KEY,
-  ruleId TEXT NOT NULL REFERENCES automationRules(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  targetId TEXT NOT NULL,
-  targetName TEXT,
-  message TEXT NOT NULL,
-  severity TEXT NOT NULL,
-  timestamp BIGINT NOT NULL,
-  read BOOLEAN DEFAULT false
-);
-
--- Create indexes for performance
-CREATE INDEX idx_videos_creatorId ON videos(creatorId);
-CREATE INDEX idx_videos_date ON videos(date);
-CREATE INDEX idx_videos_status ON videos(status);
-CREATE INDEX idx_activityLogs_targetId ON activityLogs(targetId);
-CREATE INDEX idx_activityLogs_timestamp ON activityLogs(timestamp);
-CREATE INDEX idx_automationAlerts_ruleId ON automationAlerts(ruleId);
-CREATE INDEX idx_automationAlerts_read ON automationAlerts(read);
-CREATE INDEX idx_creators_status ON creators(status);
-
--- Grant permissions to anon users (no RLS)
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+-- Grant public access
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 ```
 
-**CLICK RUN**
+**CLICK RUN** - This should work!
 
-If you get an error, try clicking RUN again - sometimes it needs 2 tries.
+## If THAT still fails:
+
+Use this SUPER SIMPLE version:
+
+```sql
+ALTER TABLE creators DISABLE ROW LEVEL SECURITY;
+ALTER TABLE videos DISABLE ROW LEVEL SECURITY;
+```
+
+Just run those 2 lines first.
 
 ## Then Vercel
 
 1. Go to https://vercel.com
-2. Your Project → Deployments
-3. Latest deployment → ... → Redeploy
+2. Your Project → Deployments  
+3. Latest → ... → Redeploy
 4. Wait for "Ready"
 
-## Test Immediately
+## Test
 
 - Open your URL
-- Add a creator
-- Check Supabase → Table Editor → creators table → Should see your data
-- **Ask your partner to open the same URL**
-- Partner should see your data instantly ✅
+- Add creator
+- Ask partner to open same URL
+- Partner refreshes page
+- Should see your data ✅
 
-**THAT'S IT. SHARED DATA WORKS.**
+**IF STILL NOT WORKING:**
+
+Tell me the EXACT error message and I'll fix it properly.
+
 
