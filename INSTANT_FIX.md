@@ -7,14 +7,15 @@ Go to: https://supabase.com → Your Project → SQL Editor → New Query
 **PASTE THIS EXACTLY:**
 
 ```sql
--- Drop and recreate tables without RLS
+-- Drop tables in correct order (respecting foreign keys)
 DROP TABLE IF EXISTS automationAlerts CASCADE;
 DROP TABLE IF EXISTS automationRules CASCADE;
 DROP TABLE IF EXISTS activityLogs CASCADE;
-DROP TABLE IF EXISTS "dailyRequirements" CASCADE;
 DROP TABLE IF EXISTS videos CASCADE;
+DROP TABLE IF EXISTS "dailyRequirements" CASCADE;
 DROP TABLE IF EXISTS creators CASCADE;
 
+-- Create creators first (no dependencies)
 CREATE TABLE creators (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -24,9 +25,10 @@ CREATE TABLE creators (
   updatedAt BIGINT NOT NULL
 );
 
+-- Create videos (depends on creators)
 CREATE TABLE videos (
   id TEXT PRIMARY KEY,
-  creatorId TEXT NOT NULL,
+  creatorId TEXT NOT NULL REFERENCES creators(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
   slot INTEGER NOT NULL,
   videoUrl TEXT NOT NULL,
@@ -39,6 +41,7 @@ CREATE TABLE videos (
   updatedAt BIGINT NOT NULL
 );
 
+-- Create dailyRequirements
 CREATE TABLE "dailyRequirements" (
   id TEXT PRIMARY KEY,
   dayOfWeek INTEGER NOT NULL UNIQUE,
@@ -47,6 +50,7 @@ CREATE TABLE "dailyRequirements" (
   updatedAt BIGINT NOT NULL
 );
 
+-- Create activityLogs
 CREATE TABLE activityLogs (
   id TEXT PRIMARY KEY,
   action TEXT NOT NULL,
@@ -57,6 +61,7 @@ CREATE TABLE activityLogs (
   timestamp BIGINT NOT NULL
 );
 
+-- Create automationRules
 CREATE TABLE automationRules (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -68,9 +73,10 @@ CREATE TABLE automationRules (
   updatedAt BIGINT NOT NULL
 );
 
+-- Create automationAlerts (depends on automationRules)
 CREATE TABLE automationAlerts (
   id TEXT PRIMARY KEY,
-  ruleId TEXT NOT NULL,
+  ruleId TEXT NOT NULL REFERENCES automationRules(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   targetId TEXT NOT NULL,
   targetName TEXT,
@@ -80,12 +86,24 @@ CREATE TABLE automationAlerts (
   read BOOLEAN DEFAULT false
 );
 
--- NO RLS - Allow all access
+-- Create indexes for performance
 CREATE INDEX idx_videos_creatorId ON videos(creatorId);
 CREATE INDEX idx_videos_date ON videos(date);
+CREATE INDEX idx_videos_status ON videos(status);
+CREATE INDEX idx_activityLogs_targetId ON activityLogs(targetId);
+CREATE INDEX idx_activityLogs_timestamp ON activityLogs(timestamp);
+CREATE INDEX idx_automationAlerts_ruleId ON automationAlerts(ruleId);
+CREATE INDEX idx_automationAlerts_read ON automationAlerts(read);
+CREATE INDEX idx_creators_status ON creators(status);
+
+-- Grant permissions to anon users (no RLS)
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 ```
 
 **CLICK RUN**
+
+If you get an error, try clicking RUN again - sometimes it needs 2 tries.
 
 ## Then Vercel
 
@@ -94,12 +112,13 @@ CREATE INDEX idx_videos_date ON videos(date);
 3. Latest deployment → ... → Redeploy
 4. Wait for "Ready"
 
-## Test
+## Test Immediately
 
 - Open your URL
 - Add a creator
-- Check Supabase → creators table → Should see it
-- Ask your partner to open same URL
-- Partner should see your data
+- Check Supabase → Table Editor → creators table → Should see your data
+- **Ask your partner to open the same URL**
+- Partner should see your data instantly ✅
 
-**THAT'S IT. IT WILL WORK.**
+**THAT'S IT. SHARED DATA WORKS.**
+
