@@ -29,16 +29,18 @@ export default function CalendarDayModal({ date, onClose }: Props) {
 
   const dayVideos = data ? data.videos.filter(v => v.date === date) : []
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Delete this video?')) {
-      deleteVideo(id)
+      await deleteVideo(id)
+      alert('✅ Deleted from cloud!')
       window.location.reload()
     }
   }
 
-  const handleUpdateStatus = (videoId: string, newStatus: string) => {
-    updateVideo(videoId, { status: newStatus as any })
+  const handleUpdateStatus = async (videoId: string, newStatus: string) => {
+    await updateVideo(videoId, { status: newStatus as any })
     setEditingId(null)
+    alert('✅ Updated in cloud!')
     window.location.reload()
   }
 

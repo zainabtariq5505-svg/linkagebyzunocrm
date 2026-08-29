@@ -74,7 +74,7 @@ export default function AddVideoModal({ onClose }: Props) {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -93,7 +93,8 @@ export default function AddVideoModal({ onClose }: Props) {
     }
 
     try {
-      addVideo({
+      // AWAIT Supabase save - this forces sync!
+      await addVideo({
         creatorId: formData.creatorId,
         date: formData.date,
         slot: parseInt(formData.slot),
@@ -105,9 +106,11 @@ export default function AddVideoModal({ onClose }: Props) {
         notes: formData.notes.trim() || undefined,
       })
 
+      alert('✅ Video saved to cloud!')
       window.location.reload()
     } catch (err) {
-      setError('Failed to add video')
+      console.error('Failed to save video:', err)
+      setError('Failed to add video - check console')
       setLoading(false)
     }
   }

@@ -22,10 +22,11 @@ export default function VideosPage() {
     setData(crmData)
   }, [])
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Delete this video?')) {
-      deleteVideo(id)
+      await deleteVideo(id)
       addActivityLog('delete_video', `Video ${id}`, 'Deleted video')
+      alert('✅ Deleted from cloud!')
       window.location.reload()
     }
   }

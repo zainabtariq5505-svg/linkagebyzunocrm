@@ -67,7 +67,7 @@ export default function EditVideoModal({ video, onClose }: Props) {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -85,7 +85,8 @@ export default function EditVideoModal({ video, onClose }: Props) {
     }
 
     try {
-      updateVideo(video.id, {
+      // AWAIT Supabase save!
+      await updateVideo(video.id, {
         creatorId: formData.creatorId,
         date: formData.date,
         slot: parseInt(formData.slot),

@@ -21,7 +21,7 @@ export default function EditCreatorModal({ creator, onClose }: Props) {
   })
   const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -31,16 +31,19 @@ export default function EditCreatorModal({ creator, onClose }: Props) {
     }
 
     try {
-      updateCreator(creator.id, {
+      // AWAIT Supabase save!
+      await updateCreator(creator.id, {
         name: formData.name.trim(),
         instagramUsername: formData.instagramUsername.trim(),
         accountSize: parseInt(formData.accountSize),
         status: formData.status,
       })
 
+      alert('✅ Creator updated in cloud!')
       window.location.reload()
     } catch (err) {
-      setError('Failed to update creator')
+      console.error('Failed to update creator:', err)
+      setError('Failed to update creator - check console')
     }
   }
 

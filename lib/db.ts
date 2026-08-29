@@ -157,88 +157,96 @@ export async function saveDataToSupabase(data: CRMData): Promise<void> {
 }
 
 /**
- * Creator operations
+ * Creator operations - ASYNC to force Supabase sync
  */
-export function addCreator(creator: Omit<Creator, 'id' | 'createdAt'>): Creator {
+export async function addCreator(creator: Omit<Creator, 'id' | 'createdAt'>): Promise<Creator> {
   const newCreator = addCreatorLocal(creator)
   const data = loadFromLocal()
   saveToLocal(data)
-  // Also save to Supabase in background
-  saveDataToSupabase(data)
+  // FORCE Supabase save and WAIT for it
+  await saveDataToSupabase(data)
+  console.log('✅ Creator saved to Supabase!')
   return newCreator
 }
 
-export function updateCreator(id: string, updates: Partial<Creator>): Creator | null {
+export async function updateCreator(id: string, updates: Partial<Creator>): Promise<Creator | null> {
   const result = updateCreatorLocal(id, updates)
   if (result) {
     const data = loadFromLocal()
     saveToLocal(data)
-    // Also save to Supabase in background
-    saveDataToSupabase(data)
+    // FORCE Supabase save and WAIT for it
+    await saveDataToSupabase(data)
+    console.log('✅ Creator updated in Supabase!')
   }
   return result
 }
 
-export function deleteCreator(id: string): boolean {
+export async function deleteCreator(id: string): Promise<boolean> {
   const result = deleteCreatorLocal(id)
   if (result) {
     const data = loadFromLocal()
     saveToLocal(data)
-    // Also save to Supabase in background
-    saveDataToSupabase(data)
+    // FORCE Supabase save and WAIT for it
+    await saveDataToSupabase(data)
+    console.log('✅ Creator deleted from Supabase!')
   }
   return result
 }
 
 /**
- * Video operations
+ * Video operations - ASYNC to force Supabase sync
  */
-export function addVideo(video: Omit<Video, 'id' | 'createdAt'>): Video {
+export async function addVideo(video: Omit<Video, 'id' | 'createdAt'>): Promise<Video> {
   const newVideo = addVideoLocal(video)
   const data = loadFromLocal()
   saveToLocal(data)
-  // Also save to Supabase in background
-  saveDataToSupabase(data)
+  // FORCE Supabase save and WAIT for it
+  await saveDataToSupabase(data)
+  console.log('✅ Video saved to Supabase!')
   return newVideo
 }
 
-export function updateVideo(id: string, updates: Partial<Video>): Video | null {
+export async function updateVideo(id: string, updates: Partial<Video>): Promise<Video | null> {
   const result = updateVideoLocal(id, updates)
   if (result) {
     const data = loadFromLocal()
     saveToLocal(data)
-    // Also save to Supabase in background
-    saveDataToSupabase(data)
+    // FORCE Supabase save and WAIT for it
+    await saveDataToSupabase(data)
+    console.log('✅ Video updated in Supabase!')
   }
   return result
 }
 
-export function deleteVideo(id: string): boolean {
+export async function deleteVideo(id: string): Promise<boolean> {
   const result = deleteVideoLocal(id)
   if (result) {
     const data = loadFromLocal()
     saveToLocal(data)
-    // Also save to Supabase in background
-    saveDataToSupabase(data)
+    // FORCE Supabase save and WAIT for it
+    await saveDataToSupabase(data)
+    console.log('✅ Video deleted from Supabase!')
   }
   return result
 }
 
 /**
- * Settings operations
+ * Settings operations - ASYNC to force Supabase sync
  */
-export function updateDailyRequirement(dayOfWeek: number, requiredVideos: number): void {
+export async function updateDailyRequirement(dayOfWeek: number, requiredVideos: number): Promise<void> {
   updateDailyRequirementLocal(dayOfWeek, requiredVideos)
   const data = loadFromLocal()
   saveToLocal(data)
-  // Also save to Supabase in background
-  saveDataToSupabase(data)
+  // FORCE Supabase save and WAIT for it
+  await saveDataToSupabase(data)
+  console.log('✅ Daily requirement updated in Supabase!')
 }
 
-export function updateSettings(settings: Partial<CRMData['settings']>): void {
+export async function updateSettings(settings: Partial<CRMData['settings']>): Promise<void> {
   updateSettingsLocal(settings)
   const data = loadFromLocal()
   saveToLocal(data)
-  // Also save to Supabase in background
-  saveDataToSupabase(data)
+  // FORCE Supabase save and WAIT for it
+  await saveDataToSupabase(data)
+  console.log('✅ Settings updated in Supabase!')
 }

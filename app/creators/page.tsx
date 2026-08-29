@@ -20,9 +20,10 @@ export default function CreatorsPage() {
     setData(crmData)
   }, [])
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure? This will also delete all associated videos.')) {
-      deleteCreator(id)
+      await deleteCreator(id)
+      alert('✅ Creator deleted from cloud!')
       window.location.reload()
     }
   }

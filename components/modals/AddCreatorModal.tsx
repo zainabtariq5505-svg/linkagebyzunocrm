@@ -16,7 +16,7 @@ export default function AddCreatorModal({ onClose }: Props) {
   })
   const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -26,17 +26,20 @@ export default function AddCreatorModal({ onClose }: Props) {
     }
 
     try {
-      addCreator({
+      // AWAIT Supabase save - this forces sync!
+      await addCreator({
         name: formData.name.trim(),
         instagramUsername: formData.instagramUsername.trim(),
         accountSize: parseInt(formData.accountSize),
         status: 'Active',
       })
       
+      alert('✅ Creator saved to cloud!')
       // Reload page to show new creator
       window.location.reload()
     } catch (err) {
-      setError('Failed to add creator')
+      console.error('Failed to save creator:', err)
+      setError('Failed to add creator - check console')
     }
   }
 

@@ -69,7 +69,8 @@ export default function BatchImportModal({ onClose }: Props) {
         let imported = 0
         for (const creator of creators) {
           try {
-            addCreator(creator)
+            // AWAIT each save to Supabase!
+            await addCreator(creator)
             imported++
           } catch (err) {
             console.error('Failed to add creator:', err)
@@ -84,7 +85,8 @@ export default function BatchImportModal({ onClose }: Props) {
         let imported = 0
         for (const video of videos) {
           try {
-            addVideo(video)
+            // AWAIT each save to Supabase!
+            await addVideo(video)
             imported++
           } catch (err) {
             console.error('Failed to add video:', err)
@@ -94,6 +96,7 @@ export default function BatchImportModal({ onClose }: Props) {
         setSuccess(`Successfully imported ${imported} videos!`)
       }
 
+      alert('✅ All data saved to cloud!')
       setTimeout(() => {
         window.location.reload()
       }, 1500)
